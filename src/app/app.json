@@ -1,0 +1,8 @@
+{
+  "version": 1.0,
+  "name": "Netflix-backend",
+  "description": "Rest API Like Netflix",
+  "keywords": [
+    "nodejs", "prisma", "auth", "services", "controllers"
+  ]
+}

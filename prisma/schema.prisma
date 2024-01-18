@@ -1,0 +1,276 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  name           String?
+  password       String
+  status         Boolean          @default(true)
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+  Favorite       Favorite[]
+  Playlist       Playlist[]
+  Subscription   Subscription[]
+  Payment        Payment[]
+  Device         Device[]
+  View           View[]
+  Recommendation Recommendation[]
+
+  @@map("_users")
+}
+
+model Catalog {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  Content     Content[]
+
+  @@map("_catalogs")
+}
+
+model Content {
+  id              String            @id @default(uuid())
+  title           String
+  synopsis        String?
+  duration        String
+  date_publish    DateTime
+  id_catalog      String
+  catalog         Catalog           @relation(fields: [id_catalog], references: [id])
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  CategoryContent CategoryContent[]
+  View            View[]
+  Recommendation  Recommendation[]
+  Subtitle        Subtitle[]
+  Audio           Audio[]
+  FavoriteContent FavoriteContent[]
+  PlaylistContent PlaylistContent[]
+  MemberContent   MemberContent[]
+
+  @@map("_contents")
+}
+
+model Favorite {
+  id              String            @id @default(uuid())
+  title           String
+  id_user         String
+  user            User              @relation(fields: [id_user], references: [id])
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  FavoriteContent FavoriteContent[]
+
+  @@map("_favorites")
+}
+
+model Playlist {
+  id              String            @id @default(uuid())
+  title           String
+  id_user         String
+  user            User              @relation(fields: [id_user], references: [id])
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  PlaylistContent PlaylistContent[]
+
+  @@map("_playlists")
+}
+
+model Category {
+  id              String            @id @default(uuid())
+  name            String
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  CategoryContent CategoryContent[]
+
+  @@map("_categories")
+}
+
+model CategoryContent {
+  id          String   @id @default(uuid())
+  id_category String
+  id_content  String
+  category    Category @relation(fields: [id_category], references: [id])
+  content     Content  @relation(fields: [id_content], references: [id])
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("_categories_contents")
+}
+
+model TypeSubscriptionPlan {
+  id                String             @id @default(uuid())
+  name              String
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
+  SubscriptionpPlan SubscriptionPlan[]
+
+  @@map("_types_subscriptionPlans")
+}
+
+model SubscriptionPlan {
+  id                      String               @id @default(uuid())
+  price                   Decimal
+  description             String?
+  quantity_device         Int
+  id_typeSubscriptionPlan String
+  typeSubscriptionPlan    TypeSubscriptionPlan @relation(fields: [id_typeSubscriptionPlan], references: [id])
+  created_at              DateTime             @default(now())
+  updated_at              DateTime             @updatedAt
+  Subscription            Subscription[]
+
+  @@map("_subscriptionPlans")
+}
+
+model Subscription {
+  id                  String           @id @default(uuid())
+  date_start          DateTime?
+  date_final          DateTime
+  id_subscriptionPlan String
+  id_user             String
+  subscriptionPlan    SubscriptionPlan @relation(fields: [id_subscriptionPlan], references: [id])
+  user                User             @relation(fields: [id_user], references: [id])
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+  Payment             Payment[]
+
+  @@map("_subscriptions")
+}
+
+model Payment {
+  id              String       @id @default(uuid())
+  value           Decimal
+  payment_method  String       @default("Paypal") // Visa | MasterCard | American Express | Paypal | Bitcoin 
+  status          Boolean      @default(true)
+  id_subscription String
+  id_user         String
+  subscription    Subscription @relation(fields: [id_subscription], references: [id])
+  user            User         @relation(fields: [id_user], references: [id])
+  created_at      DateTime     @default(now())
+  updated_at      DateTime     @updatedAt
+
+  @@map("_payments")
+}
+
+model Device {
+  id             String   @id @default(uuid())
+  name           String   @unique
+  type           String   @default("smart Tv") //smartTV | smartphone | tablet 
+  access_history String
+  id_user        String
+  user           User     @relation(fields: [id_user], references: [id])
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("_devices")
+}
+
+model View {
+  id           String   @id @default(uuid())
+  comment      String
+  watched_time DateTime @db.Time()
+  rating       Int
+  id_user      String
+  id_content   String
+  user         User     @relation(fields: [id_user], references: [id])
+  content      Content  @relation(fields: [id_content], references: [id])
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@map("_views")
+}
+
+model Recommendation {
+  id              String   @id @default(uuid())
+  score_relevance Int
+  algorithm       String?
+  id_user         String
+  id_content      String
+  user            User     @relation(fields: [id_user], references: [id])
+  content         Content  @relation(fields: [id_content], references: [id])
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@map("_recommendations")
+}
+
+model Subtitle {
+  id         String   @id @default(uuid())
+  language   String   @default("English") //En | Pt | ...
+  format     String   @default("SRT")
+  id_content String
+  content    Content  @relation(fields: [id_content], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("_subtitles")
+}
+
+model Audio {
+  id         String   @id @default(uuid())
+  language   String   @default("English") //En | Pt | ...
+  format     String   @default("mp3") // MP3 | MP4 | AVI
+  id_content String
+  content    Content  @relation(fields: [id_content], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("_audios")
+}
+
+model Member {
+  id            String          @id @default(uuid())
+  name          String
+  character     String          @default("Protagonista")
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+  MemberContent MemberContent[]
+
+  @@map("_members")
+}
+
+model FavoriteContent {
+  id          String   @id @default(uuid())
+  id_favorite String
+  id_content  String
+  favorite    Favorite @relation(fields: [id_favorite], references: [id])
+  content     Content  @relation(fields: [id_content], references: [id])
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("_favorites_contents")
+}
+
+model PlaylistContent {
+  id          String   @id @default(uuid())
+  id_playlist String
+  id_content  String
+  playlist    Playlist @relation(fields: [id_playlist], references: [id])
+  content     Content  @relation(fields: [id_content], references: [id])
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("_playlists_contents")
+}
+
+model MemberContent {
+  id         String   @id @default(uuid())
+  id_member  String
+  id_content String
+  member     Member   @relation(fields: [id_member], references: [id])
+  content    Content  @relation(fields: [id_content], references: [id])
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("_members_contents")
+}
